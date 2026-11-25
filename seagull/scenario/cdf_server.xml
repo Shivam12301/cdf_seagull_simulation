@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  CDF (Charging Data Function) Server Scenario for Seagull
+  Handles Capabilities Exchange (CER/CEA) and processes ACR messages (Start/Interim/Stop/Event)
+  responding with 2001 DIAMETER_SUCCESS ACA.
+-->
+<scenario>
+  <!-- Initialization: Capabilities Exchange Handshake -->
+  <init>
+    <receive channel="channel-1">
+      <command name="CER">
+      </command>
+    </receive>
+    <send channel="channel-1">
+      <command name="CEA">
+        <avp name="Result-Code" value="2001"></avp>
+        <avp name="Origin-Host" value="cdf.rf.telecom.org"></avp>
+        <avp name="Origin-Realm" value="rf.telecom.org"></avp>
+        <avp name="Host-IP-Address" value="0x00017f000001"></avp>
+        <avp name="Vendor-Id" value="10415"></avp>
+        <avp name="Product-Name" value="Seagull-CDF-Simulation"></avp>
+        <avp name="Acct-Application-Id" value="3"></avp>
+      </command>
+    </send>
+  </init>
+
+  <!-- Traffic Phase: Receive ACR from CTF and respond with ACA -->
+  <traffic>
+    <receive channel="channel-1">
+      <action>
+        <!-- Store Session-Id, Record-Type, and Record-Number from incoming ACR -->
+        <store name="AVP" entities="Session-Id" fx="to-var(session_id)"></store>
+        <store name="AVP" entities="Accounting-Record-Type" fx="to-var(rec_type)"></store>
+        <store name="AVP" entities="Accounting-Record-Number" fx="to-var(rec_num)"></store>
+      </action>
+      <command name="ACR">
+        <avp name="Session-Id" value="pva"></avp>
+        <avp name="Accounting-Record-Type" value="pva"></avp>
+        <avp name="Accounting-Record-Number" value="pva"></avp>
+      </command>
+    </receive>
+
+    <send channel="channel-1">
+      <action>
+        <!-- Correlate ACA response to matching session and record number -->
+        <set-value name="Session-Id" format="$(session_id)"></set-value>
+        <set-value name="Accounting-Record-Type" format="$(rec_type)"></set-value>
+        <set-value name="Accounting-Record-Number" format="$(rec_num)"></set-value>
+      </action>
+      <command name="ACA">
+        <avp name="Session-Id" value="value_is_replaced"></avp>
+        <avp name="Result-Code" value="2001"></avp>
+        <avp name="Origin-Host" value="cdf.rf.telecom.org"></avp>
+        <avp name="Origin-Realm" value="rf.telecom.org"></avp>
+        <avp name="Accounting-Record-Type" value="value_is_replaced"></avp>
+        <avp name="Accounting-Record-Number" value="value_is_replaced"></avp>
+        <avp name="Acct-Application-Id" value="3"></avp>
+      </command>
+    </send>
+  </traffic>
+</scenario>

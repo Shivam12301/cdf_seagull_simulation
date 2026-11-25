@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  CTF (Charging Trigger Function) Client Scenario - Session-Based Charging (SCUR)
+  Flow:
+    1. Capabilities Exchange (CER -> CEA)
+    2. ACR [Start] (Record-Type = 1, Record-Number = 0) -> ACA (2001)
+    3. Pause (Simulating call/data activity)
+    4. ACR [Interim] (Record-Type = 2, Record-Number = 1) -> ACA (2001)
+    5. Pause
+    6. ACR [Stop] (Record-Type = 3, Record-Number = 2) -> ACA (2001)
+-->
+<scenario>
+  <counter>
+    <counter name="session_id_cnt" start="10000" step="1" datatype="4"></counter>
+  </counter>
+
+  <!-- Initialization: Capabilities Exchange -->
+  <init>
+    <send channel="channel-1">
+      <command name="CER">
+        <avp name="Origin-Host" value="ctf.rf.telecom.org"></avp>
+        <avp name="Origin-Realm" value="rf.telecom.org"></avp>
+        <avp name="Host-IP-Address" value="0x00017f000001"></avp>
+        <avp name="Vendor-Id" value="10415"></avp>
+        <avp name="Product-Name" value="Seagull-CTF-Client"></avp>
+        <avp name="Acct-Application-Id" value="3"></avp>
+      </command>
+    </send>
+    <receive channel="channel-1">
+      <command name="CEA">
+        <avp name="Result-Code" value="2001"></avp>
+      </command>
+    </receive>
+  </init>
+
+  <!-- Traffic: Session Charging Flow (Start -> Interim -> Stop) -->
+  <traffic>
+    <!-- ==================== 1. ACR [START] ==================== -->
+    <send channel="channel-1">
+      <action>
+        <increment-counter name="session_id_cnt"></increment-counter>
+        <set-value name="Session-Id" format="ctf.rf.telecom.org;1700000000;$(session_id_cnt)"></set-value>
+      </action>
+      <command name="ACR">
+        <avp name="Session-Id" value="value_is_replaced"></avp>
+        <avp name="Origin-Host" value="ctf.rf.telecom.org"></avp>
+        <avp name="Origin-Realm" value="rf.telecom.org"></avp>
+        <avp name="Destination-Realm" value="rf.telecom.org"></avp>
+        <avp name="Acct-Application-Id" value="3"></avp>
+        <avp name="Accounting-Record-Type" value="1"></avp> <!-- 1 = START_RECORD -->
+        <avp name="Accounting-Record-Number" value="0"></avp>
+        <avp name="Acct-Interim-Interval" value="60"></avp>
+        <avp name="Service-Context-Id" value="32251@3gpp.org"></avp>
+        <avp name="User-Name" value="491701234567@rf.telecom.org"></avp>
+        <avp name="Called-Station-Id" value="internet"></avp>
+      </command>
+    </send>
+
+    <receive channel="channel-1">
+      <command name="ACA">
+        <avp name="Result-Code" value="2001"></avp>
+        <avp name="Accounting-Record-Type" value="1"></avp>
+        <avp name="Accounting-Record-Number" value="0"></avp>
+      </command>
+    </receive>
+
+    <!-- Pause to simulate ongoing session -->
+    <pause value="1000"></pause>
+
+    <!-- ==================== 2. ACR [INTERIM] ==================== -->
+    <send channel="channel-1">
+      <command name="ACR">
+        <avp name="Session-Id" value="value_is_replaced"></avp>
+        <avp name="Origin-Host" value="ctf.rf.telecom.org"></avp>
+        <avp name="Origin-Realm" value="rf.telecom.org"></avp>
+        <avp name="Destination-Realm" value="rf.telecom.org"></avp>
+        <avp name="Acct-Application-Id" value="3"></avp>
+        <avp name="Accounting-Record-Type" value="2"></avp> <!-- 2 = INTERIM_RECORD -->
+        <avp name="Accounting-Record-Number" value="1"></avp>
+        <avp name="Service-Context-Id" value="32251@3gpp.org"></avp>
+        <avp name="User-Name" value="491701234567@rf.telecom.org"></avp>
+        <avp name="CC-Total-Octets" value="5242880"></avp>
+      </command>
+    </send>
+
+    <receive channel="channel-1">
+      <command name="ACA">
+        <avp name="Result-Code" value="2001"></avp>
+        <avp name="Accounting-Record-Type" value="2"></avp>
+        <avp name="Accounting-Record-Number" value="1"></avp>
+      </command>
+    </receive>
+
+    <!-- Pause before session termination -->
+    <pause value="1000"></pause>
+
+    <!-- ==================== 3. ACR [STOP] ==================== -->
+    <send channel="channel-1">
+      <command name="ACR">
+        <avp name="Session-Id" value="value_is_replaced"></avp>
+        <avp name="Origin-Host" value="ctf.rf.telecom.org"></avp>
+        <avp name="Origin-Realm" value="rf.telecom.org"></avp>
+        <avp name="Destination-Realm" value="rf.telecom.org"></avp>
+        <avp name="Acct-Application-Id" value="3"></avp>
+        <avp name="Accounting-Record-Type" value="3"></avp> <!-- 3 = STOP_RECORD -->
+        <avp name="Accounting-Record-Number" value="2"></avp>
+        <avp name="Service-Context-Id" value="32251@3gpp.org"></avp>
+        <avp name="User-Name" value="491701234567@rf.telecom.org"></avp>
+        <avp name="CC-Total-Octets" value="10485760"></avp>
+        <avp name="Termination-Cause" value="1"></avp> <!-- 1 = DIAMETER_LOGOUT -->
+      </command>
+    </send>
+
+    <receive channel="channel-1">
+      <command name="ACA">
+        <avp name="Result-Code" value="2001"></avp>
+        <avp name="Accounting-Record-Type" value="3"></avp>
+        <avp name="Accounting-Record-Number" value="2"></avp>
+      </command>
+    </receive>
+  </traffic>
+</scenario>

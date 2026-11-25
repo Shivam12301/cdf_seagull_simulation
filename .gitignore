@@ -1,0 +1,20 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+logs/
+*.log
+
+# Generated CDR output files (preserve directory placeholders)
+cdrs/*
+!cdrs/.gitkeep
+cdrs_test/*
+!cdrs_test/.gitkeep
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

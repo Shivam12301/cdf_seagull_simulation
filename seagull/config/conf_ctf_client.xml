@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Seagull Configuration for CTF (Charging Trigger Function) Client
+  Connects to CDF Server on TCP port 3868
+-->
+<configuration name="CTF Diameter Client">
+  <!-- Protocol Transport Definition -->
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    type="tcp">
+  </define>
+
+  <!-- Transport Channel: Connect to CDF Server at 127.0.0.1:3868 -->
+  <define entity="channel"
+    name="channel-1"
+    transport="trans-ip-v4">
+    <parameter name="transport-mode" value="client"></parameter>
+    <parameter name="transport-ip" value="127.0.0.1"></parameter>
+    <parameter name="transport-port" value="3868"></parameter>
+  </define>
+
+  <!-- Traffic Configuration -->
+  <define entity="traffic-param" name="call-rate" value="1"></define>
+  <define entity="traffic-param" name="max-send" value="10"></define>
+  <define entity="traffic-param" name="display-period" value="1"></define>
+  <define entity="traffic-param" name="log-stat-period" value="5"></define>
+  <define entity="traffic-param" name="log-stat-file" value="../logs/ctf_client_stat.csv"></define>
+
+</configuration>

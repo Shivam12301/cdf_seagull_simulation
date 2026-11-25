@@ -1,0 +1,36 @@
+services:
+  # CDF (Charging Data Function) Server
+  cdf:
+    build:
+      context: .
+      dockerfile: Dockerfile.seagull
+    container_name: cdf-server
+    ports:
+      - "3868:3868"
+    volumes:
+      - ./seagull:/opt/seagull/work/seagull
+      - ./logs:/opt/seagull/work/logs
+      - ./cdrs:/opt/seagull/work/cdrs
+    command: >
+      bash -c "seagull -conf /opt/seagull/work/seagull/config/conf_cdf_server.xml
+      -dico /opt/seagull/work/seagull/config/base_rf.xml
+      -scen /opt/seagull/work/seagull/scenario/cdf_server.xml
+      -log /opt/seagull/work/logs/cdf_server.log -llevel E"
+
+  # CTF (Charging Trigger Function) Client
+  ctf:
+    build:
+      context: .
+      dockerfile: Dockerfile.seagull
+    container_name: ctf-client
+    depends_on:
+      - cdf
+    volumes:
+      - ./seagull:/opt/seagull/work/seagull
+      - ./logs:/opt/seagull/work/logs
+    command: >
+      bash -c "sleep 2 &&
+      seagull -conf /opt/seagull/work/seagull/config/conf_ctf_client.xml
+      -dico /opt/seagull/work/seagull/config/base_rf.xml
+      -scen /opt/seagull/work/seagull/scenario/ctf_session_client.xml
+      -log /opt/seagull/work/logs/ctf_client.log -llevel E"

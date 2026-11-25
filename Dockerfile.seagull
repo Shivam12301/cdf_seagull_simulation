@@ -1,0 +1,38 @@
+# Dockerfile for Seagull Diameter Simulation
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies for building and running Seagull
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    bison \
+    flex \
+    ksh \
+    libxml2-dev \
+    libsctp-dev \
+    lksctp-tools \
+    libssl-dev \
+    git \
+    wget \
+    net-tools \
+    iputils-ping \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up Seagull directory
+WORKDIR /opt/seagull
+
+# Clone and compile Seagull with Diameter and SCTP support
+RUN git clone https://github.com/codeghar/Seagull.git src && \
+    cd src/seagull/trunk/src && \
+    ksh build.ksh || true
+
+# Symlink or install binary to /usr/local/bin
+RUN if [ -f /opt/seagull/src/seagull/trunk/src/bin/seagull ]; then \
+        cp /opt/seagull/src/seagull/trunk/src/bin/seagull /usr/local/bin/seagull; \
+    fi
+
+WORKDIR /opt/seagull/work
+
+CMD ["seagull", "-h"]
